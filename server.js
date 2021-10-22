@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const http = require('http');
+const bodyparser = require('body-parser')
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const cors = require('cors');
@@ -25,5 +26,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-  console.log(`listening on *:${port}``);
+  console.log(`listening on *:${port}`);
 });
