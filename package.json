@@ -1,4 +1,8 @@
 {
+  
+  "name": "gamebiris",
+  "description": "Our sample Node to Heroku app",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
