@@ -6,7 +6,12 @@ const { Server } = require("socket.io");
 const cors = require('cors');
 const io = new Server(server);
 
+
+const port = process.env.PORT || 3001;
+
 app.use(cors())
+app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {
   res.json({msg: 'hello'});
@@ -19,6 +24,6 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(3001, () => {
-  console.log('listening on *:3000');
+server.listen(port, () => {
+  console.log(`listening on *:${port}``);
 });
