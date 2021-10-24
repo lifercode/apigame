@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http");
@@ -9,7 +10,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://goofy-hamilton-34c1a3.netlify.app",
+    origin: process.env.CLIENT_URL,
     methods: ["GET", "POST"]
   }
 });
@@ -17,14 +18,10 @@ const io = new Server(httpServer, {
 const port = process.env.PORT || 3002;
 
 app.use(cors())
-
-// parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
-
-// parse application/json
 app.use(bodyParser.json())
 
-mongoose.connect('mongodb+srv://dom:dom@dom.iuvn4.mongodb.net/test');
+mongoose.connect(process.env.DB_CONNECT_URL);
 
 const Player = mongoose.model('Player', {
   name: String,
@@ -44,6 +41,18 @@ app.get('/', (req, res) => {
 
 app.get('/player/:playerId', async (req, res) => {
   const player = await Player.findById(req.params.playerId);
+  console.log('viiim adqui')
+  io.emit('move', {
+    id: '6173549ae59006316444cffb',
+    target: 'left'
+  })
+
+  res.json(player);
+});
+
+app.get('/player/connect/:playerId', async (req, res) => {
+  const player = await Player.findById(req.params.playerId);
+  io.emit('connected', player)
 
   res.json(player);
 });
@@ -59,16 +68,26 @@ app.get('/players/:playerId/:scene', async (req, res) => {
 });
 
 app.put('/players', async (req, res) => {
-  const { playerId, x, y, scene } = req.body;
+  const { playerId, x, y } = req.body;
 
   io.emit('move', {
     id: playerId,
     x,
-    y,
-    scene
+    y
   })
 
-  const a = await Player.findByIdAndUpdate(playerId, { x, y, scene });
+  const a = await Player.findByIdAndUpdate(playerId, { x, y });
+
+
+  res.json({playerId});
+});
+
+app.put('/players/scene', async (req, res) => {
+  const { playerId, scene } = req.body;
+
+  const a = await Player.findByIdAndUpdate(playerId, { scene });
+
+  io.emit('connected', a)
 
   res.json({playerId});
 });
@@ -86,34 +105,16 @@ app.post('/players', async (req, res) => {
 });
 
 io.on('connection', async (socket) => {
+  const info = {
+    id: socket.id,
+    connected: socket.connected,
+  };
 
-  socket.on('vamo', async (msg) => {
-    // console.log(msg);
+  console.log('a user connected', info);
 
-
-    // await Player.findByIdAndUpdate({ _id: msg.id }, { scene: 'ijiasjsdoidsaj' })
-
-    // const doc = await Player.findOne();
-
-    // console.log(doc)
-
-
+  socket.on('disconnect', async () => {
+    console.log('user disconnected', info);
   });
-  // function randomIntFromInterval(min, max) {
-  //   return Math.floor(Math.random() * (max - min + 1) + min)
-  // }
-
-  // const newPLayer = await Player.create({
-  //   x: randomIntFromInterval(1, 9),
-  //   y: randomIntFromInterval(1, 9)
-  // });
-  // console.log('a user connected', newPLayer);
-
-  // socket.on('disconnect', async () => {
-  //   const deletedPlayer = await Player.deleteOne({ _id: newPLayer._id });
-    
-  //   console.log('user disconnected', deletedPlayer);
-  // });
 });
 
 httpServer.listen(port, () => {
